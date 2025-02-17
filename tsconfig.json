@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@vue/*": ["packages/*/src/index.ts"]
+    }
+  },
+  "include": ["packages/**/*.ts"]
+  // "exclude": ["node_modules"]
+}
