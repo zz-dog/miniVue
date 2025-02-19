@@ -6,7 +6,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "dev": "node ./script/dev.js reactivity -f esm"
+    "dev": "node ./script/dev.js reactivity -f esm",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",

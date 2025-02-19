@@ -1,3 +1,5 @@
+import type { Dep } from "./reactiveEffect"
+
 export const effect = (fn: Function, options?) => {
   //创建一个响应式的effect，数据变化会重新执行fn
   const _effect = new ReactiveEffect(fn, () => {
@@ -9,6 +11,9 @@ export const effect = (fn: Function, options?) => {
 }
 export let activeEffect: ReactiveEffect | null
 export class ReactiveEffect {
+  _trackId = 0;//用于记录当前effect执行了几次
+  deps = []
+  _depsLength = 0 //
   private active = true //默认是激活状态
   constructor(public fn: Function, public scheduler: Function) {
 
@@ -27,5 +32,22 @@ export class ReactiveEffect {
       activeEffect = lastEffect
     }
 
+  }
+}
+
+
+export const trackEffect = (effect: ReactiveEffect, dep: Dep) => {
+  //双向记忆 
+  dep.set(effect, effect._trackId)
+  effect.deps[effect._depsLength++] = dep
+}
+
+
+export const triggerEffect = (dep: Dep) => {
+  //触发更新
+  for (const effect of dep.keys()) {
+    if (effect.scheduler) {
+      effect.scheduler()
+    }
   }
 }
