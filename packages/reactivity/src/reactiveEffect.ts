@@ -25,6 +25,7 @@ export const track = (target: object, key: string) => {
     }
     trackEffect(activeEffect, dep)
     console.log(targetMap)
+
   }
 }
 
