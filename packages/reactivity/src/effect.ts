@@ -1,3 +1,4 @@
+import { DirtyLevels } from "./constants";
 import type { Dep } from "./reactiveEffect";
 
 export const effect = (fn: Function, options?) => {
@@ -18,9 +19,13 @@ export class ReactiveEffect {
   deps: Dep[] = [];
   _depsLength = 0; //
   _running = 0; //是否正在执行
+  _dirtyLevel = DirtyLevels.Dirty; //脏数据
   private active = true; //默认是激活状态
+
   constructor(public fn: Function, public scheduler: Function) {}
   run() {
+    // 运行后变为干净数据
+    this._dirtyLevel = DirtyLevels.NoDirty;
     if (!this.active) {
       //如果不是激活状态，直接返回
       return this.fn();
@@ -37,6 +42,12 @@ export class ReactiveEffect {
 
       activeEffect = lastEffect;
     }
+  }
+  public get dirty() {
+    return this._dirtyLevel === DirtyLevels.Dirty;
+  }
+  public set dirty(v: Boolean) {
+    this._dirtyLevel = v ? DirtyLevels.Dirty : DirtyLevels.NoDirty;
   }
 }
 
@@ -63,6 +74,11 @@ export const trackEffect = (effect: ReactiveEffect, dep: Dep) => {
 export const triggerEffect = (dep: Dep) => {
   //触发更新
   for (const effect of dep.keys()) {
+    // 触发更新时，如果effect不是脏数据，设置为脏数据
+    if (effect._dirtyLevel < DirtyLevels.Dirty) {
+      effect.dirty = true;
+    }
+
     if (effect.scheduler) {
       if (effect._running === 0) {
         //如果effect没有在执行，直接执行

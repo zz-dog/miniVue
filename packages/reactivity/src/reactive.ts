@@ -1,5 +1,6 @@
 import { isObject } from "@vue/shared";
-import { mutableHandlers, ReactiveFlags } from "./baseHandler";
+import { mutableHandlers } from "./baseHandler";
+import { ReactiveFlags } from "./constants";
 //用于记录代理后的缓冲对象，可以复用
 const reactiveMap = new WeakMap();
 
@@ -22,10 +23,10 @@ const createReactiveObject = (target: object) => {
   }
 
   //创建代理对象
-  const procy = new Proxy(target, mutableHandlers);
+  const proxy = new Proxy(target, mutableHandlers);
   //缓存代理对象
-  reactiveMap.set(target, procy);
-  return procy;
+  reactiveMap.set(target, proxy);
+  return proxy;
 };
 
 export const toReactive = (value) => {

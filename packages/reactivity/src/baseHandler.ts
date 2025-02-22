@@ -1,9 +1,7 @@
 import { isObject } from "@vue/shared";
 import { reactive } from "./reactive";
 import { track, trigger } from "./reactiveEffect";
-export enum ReactiveFlags {
-  IS_REACTIVE = "__v_isReactive", //代理标识
-}
+import { ReactiveFlags } from "./constants";
 export const mutableHandlers: ProxyHandler<object> = {
   get(target, key, receiver) {
     //如果是代理标识，返回true

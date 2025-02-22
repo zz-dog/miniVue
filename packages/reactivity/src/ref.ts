@@ -1,7 +1,7 @@
 import { activeEffect, trackEffect, triggerEffect } from "./effect";
 import { toReactive } from "./reactive";
 import { createDep } from "./reactiveEffect";
-
+import { Dep } from "./reactiveEffect";
 export const ref = (raw) => {
   return createRef(raw);
 };
@@ -12,10 +12,10 @@ const createRef = (raw, Shallow = false) => {
   return new RefImpl(raw);
 };
 
-class RefImpl {
+export class RefImpl {
   __v_isRef = true; //标识是ref
   _value; //用于保存值ref的值
-  dep; //用于收集依赖
+  dep: Dep; //用于收集依赖
   constructor(private rawValue) {
     this._value = toReactive(rawValue);
   }
@@ -33,7 +33,7 @@ class RefImpl {
   }
 }
 
-const trackRefValue = (ref: RefImpl) => {
+export const trackRefValue = (ref: RefImpl) => {
   if (activeEffect) {
     trackEffect(
       activeEffect,
@@ -41,12 +41,40 @@ const trackRefValue = (ref: RefImpl) => {
         ref.dep = undefined;
       }, undefined))
     );
-    console.log("ref", ref);
   }
 };
-const triggerRefValue = (Ref: RefImpl) => {
+export const triggerRefValue = (Ref: RefImpl) => {
   let dep = Ref.dep;
   if (dep) {
     triggerEffect(dep);
   }
+};
+
+//toRef,toRefs
+
+export const toRef = (object, key) => {
+  return new ObjectRefImpl(object, key);
+};
+class ObjectRefImpl {
+  __v_isRef = true;
+  constructor(private _object, private _key) {}
+  get value() {
+    return this._object[this._key];
+  }
+  set value(newValue) {
+    this._object[this._key] = newValue;
+  }
+}
+
+export const toRefs = (object: object, key) => {
+  const res = {};
+  for (let key in object) {
+    res[key] = toRef(object, key);
+  }
+  return res;
+};
+
+export const proxyRefs = (objectWithRef) => {
+  if (!objectWithRef.__v_isRef) return objectWithRef;
+  return objectWithRef.value;
 };
