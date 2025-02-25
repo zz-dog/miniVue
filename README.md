@@ -28,3 +28,9 @@ pnpm i
 - 计算属性具备依赖收集的 effect，依赖的值变化后会触发 effec 的执行。
 - 计算属性维护了一个 dirty 属性，默认为 true，运行一次后改为 false，effect 执行后会让 dirty 为 true，可用于缓存数据
 - 执行 computed 时会对所依赖的 ref/reactive 数据创建 effect，当所依赖的数据变化时会触发 computed 的自身的依赖更新， 并重新计算
+
+## watch
+
+- 侦听函数维护了自身的 effect 所依赖的 ref/reactive 数据更新时就会触发 fn 的执行
+- 执行 fn 时侦听器会访问响应数据的属性，使得响应式数据的属性会进行依赖收集
+- watch 可返回 unwatch 方法，用于停止监听 ，执行后会清除依赖并使 effect 失活,

@@ -35,11 +35,14 @@ export class RefImpl {
 
 export const trackRefValue = (ref: RefImpl) => {
   if (activeEffect) {
+    console.log("trackRefValue", ref);
     trackEffect(
       activeEffect,
-      (ref.dep = createDep(() => {
-        ref.dep = undefined;
-      }, undefined))
+      (ref.dep =
+        ref.dep ||
+        createDep(() => {
+          ref.dep = undefined;
+        }, undefined))
     );
   }
 };
@@ -77,4 +80,7 @@ export const toRefs = (object: object, key) => {
 export const proxyRefs = (objectWithRef) => {
   if (!objectWithRef.__v_isRef) return objectWithRef;
   return objectWithRef.value;
+};
+export const isRef = (value) => {
+  return !!(value && value.__v_isRef);
 };

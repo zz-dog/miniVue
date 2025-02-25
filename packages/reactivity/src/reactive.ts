@@ -33,3 +33,7 @@ export const toReactive = (value) => {
   //如果是对象，代理
   return isObject(value) ? reactive(value) : value;
 };
+
+export const isReactive = (value) => {
+  return !!(value && value[ReactiveFlags.IS_REACTIVE]);
+};

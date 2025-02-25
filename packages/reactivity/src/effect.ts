@@ -49,6 +49,13 @@ export class ReactiveEffect {
   public set dirty(v: Boolean) {
     this._dirtyLevel = v ? DirtyLevels.Dirty : DirtyLevels.NoDirty;
   }
+  stop() {
+    if (this.active) {
+      this.active = false;
+      preCleanEffect(this);
+      postClearnEffect(this);
+    }
+  }
 }
 
 export const trackEffect = (effect: ReactiveEffect, dep: Dep) => {
