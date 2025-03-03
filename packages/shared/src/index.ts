@@ -5,3 +5,9 @@ export const isObject = (value: unknown) => {
 export const isFunction = (value: unknown): value is Function => {
   return typeof value === "function";
 };
+
+export const isString = (value: unknown): value is string => {
+  return typeof value === "string";
+};
+
+export * from "./shapeFlages";

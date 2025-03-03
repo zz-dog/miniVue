@@ -12,7 +12,9 @@ const __dirname = dirname(__filename);
 
 //入口文件
 const entry = resolve(__dirname, `../packages/${target}/src/index.ts`);
-
+const globalName = target.replace(/-(\w)/g, (_, c) =>
+  c ? c.toUpperCase() : ""
+);
 //打包
 esbuild
   .context({
@@ -22,7 +24,7 @@ esbuild
     format,
     sourcemap: true,
     platform: "browser",
-    globalName: target,
+    globalName: globalName,
   })
   .then((ctx) => {
     console.log(`构建成功`);
