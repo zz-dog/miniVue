@@ -6,7 +6,7 @@
 pnpm i
 ```
 
-## reactivity
+## reactivity vue 响应数据核心
 
 ### 依赖收集，触发更新
 
@@ -27,7 +27,7 @@ pnpm i
 
 ### computed
 
-- 计算属性具备依赖收集的 effect，依赖的值变化后会触发 effec 的执行。
+- 计算属性具备依赖收集的 effect，依赖的值变化后会触发 effect 的执行。
 - 计算属性维护了一个 dirty 属性，默认为 true，运行一次后改为 false，effect 执行后会让 dirty 为 true，可用于缓存数据
 - 执行 computed 时会对所依赖的 ref/reactive 数据创建 effect，当所依赖的数据变化时会触发 computed 的自身的依赖更新， 并重新计算
 
@@ -37,18 +37,27 @@ pnpm i
 - 执行 fn 时侦听器会访问响应数据的属性，使得响应式数据的属性会进行依赖收集
 - watch 可返回 unwatch 方法，用于停止监听 ，执行后会清除依赖并使 effect 失活,
 
-## runtime-dom
+## vue 渲染核心
 
-- render 内置的渲染器:基于 DOM 进行渲染
+### runtime-dom
 
-## runtime-core
+- render ceateRender 内置默认的渲染器:基于 DOM 进行渲染
+- 对 dom 操作的核心，事件绑定，class 处理，style 修改，创建 dom ,插入 dom ...
 
-### createRender
+### runtime-core
 
-- ceateRender 自定义渲染器：可用于跨平台渲染
+- ceateRender 允许用户自定义染器：可用于跨平台渲染
 - patch api 会根据虚拟 DOM 创建真实 DOM 并挂载到目标元素上
+- 真实节点创建后，虚拟会记录其节点 el 属性
+- render 时 patch 函数会对比上次渲染的 vnode 进行更新节点
 
 ### h
 
 - h 可以创建一个虚拟 dom
 - vnode 维护一个 shapeFlag 属性通过位运算来判断 children
+
+### diff 算法
+
+- 两组 vnode 进行比较时先从开头进行比较，再从尾部进行比较如果是同一个 vnode 则走递归渲染更新
+  最后处理插入/删除的 vnode
+- 可根据 vnode 的 el 属性判断是否是创建的新节点

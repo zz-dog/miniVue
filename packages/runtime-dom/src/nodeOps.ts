@@ -5,6 +5,7 @@ const nodeOps = {
     anchor: HTMLElement | null = null
   ) {
     //如果anchor为null，则表示插入到最后
+    //如果anchor不为null，则表示插入到anchor之前
     parent.insertBefore(el, anchor || null);
   },
   remove(el: HTMLElement) {
