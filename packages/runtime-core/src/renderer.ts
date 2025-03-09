@@ -1,5 +1,5 @@
 import { ShapeFlags, getSequence } from "@vue/shared";
-import { isSameVnode } from "./createVnode";
+import { isSameVnode, Text } from "./createVnode";
 export const createRenderer = (renderOptions) => {
   const {
     insert: hostInsert,
@@ -33,7 +33,17 @@ export const createRenderer = (renderOptions) => {
       unmount(n1);
       mount(n2, container, anchor);
     }
-    processElelment(n1, n2, container, anchor);
+
+    const { type } = n2;
+    console.log(type);
+    switch (type) {
+      case Text:
+        processText(n1, n2, container);
+        break;
+      default:
+        processElelment(n1, n2, container, anchor);
+        break;
+    }
   };
   //多次调用render会对虚拟节点进行比对，更新
   const render = (vnode, container) => {
@@ -87,6 +97,19 @@ export const createRenderer = (renderOptions) => {
     let newProps = n2.props || {};
     patchProps(el, oldProps, newProps);
     patchChildren(n1, n2, el);
+  };
+  const processText = (n1, n2, container) => {
+    if (n1 == null) {
+      //初次挂载
+      n2.el = hostCreateText(n2.children);
+      hostInsert(n2.el, container);
+    } else {
+      //更新
+      const el = (n2.el = n1.el);
+      if (n1.children !== n2.children) {
+        hostSetText(el, n2.children);
+      }
+    }
   };
   //对比属性
   const patchProps = (el, oldProps, newProps) => {
@@ -227,7 +250,6 @@ export const createRenderer = (renderOptions) => {
           //新节点没有挂载
           patch(null, c2[newIndex], el, anchor);
         } else {
-          console.log(j);
           //新节点已经挂载，移动位置
           if (i === sequence[j]) {
             //在最长递增子序列中，不需要移动
