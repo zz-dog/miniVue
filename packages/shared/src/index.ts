@@ -11,3 +11,4 @@ export const isString = (value: unknown): value is string => {
 };
 
 export * from "./shapeFlages";
+export * from "./sq";

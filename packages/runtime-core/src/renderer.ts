@@ -1,4 +1,4 @@
-import { ShapeFlags } from "@vue/shared";
+import { ShapeFlags, getSequence } from "@vue/shared";
 import { isSameVnode } from "./createVnode";
 export const createRenderer = (renderOptions) => {
   const {
@@ -196,6 +196,8 @@ export const createRenderer = (renderOptions) => {
       // abdecfg
       let s1 = i;
       let s2 = i;
+      let toBePatched = e2 - s2 + 1; //新节点数量
+      let newIndexTOOldIndexMap = new Array(toBePatched).fill(0); //新索引对应旧索引的映射表,默认值为0
       const keyToNewIndexMap = new Map(); //做一个映射表，记录新节点的key和索引的关系
       for (let i = s2; i <= e2; i++) {
         const nextChild = c2[i];
@@ -209,12 +211,15 @@ export const createRenderer = (renderOptions) => {
           unmount(prevChild);
         } else {
           //说明新节点存在，递归对比
+          newIndexTOOldIndexMap[newIndex - s2] = i + 1; //新索引对应旧索引
           patch(prevChild, c2[newIndex], el);
         }
       }
+      let sequence = getSequence(newIndexTOOldIndexMap) as number[]; //获取最长递增子序列
+      let j = sequence.length - 1;
+
       //调整位置并插入新元素
       //倒叙插入
-      let toBePatched = e2 - s2 + 1; //新节点数量
       for (let i = toBePatched - 1; i >= 0; i--) {
         let newIndex = s2 + i; //新节点索引
         let anchor = c2[newIndex + 1]?.el; //下一个节点
@@ -222,8 +227,15 @@ export const createRenderer = (renderOptions) => {
           //新节点没有挂载
           patch(null, c2[newIndex], el, anchor);
         } else {
+          console.log(j);
           //新节点已经挂载，移动位置
-          hostInsert(c2[newIndex].el, el, anchor);
+          if (i === sequence[j]) {
+            //在最长递增子序列中，不需要移动
+            j--;
+          } else {
+            //不在最长递增子序列中，移动位置
+            hostInsert(c2[newIndex].el, el, anchor);
+          }
         }
       }
     }
