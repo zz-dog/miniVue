@@ -1,5 +1,8 @@
-import { ShapeFlags, getSequence } from "@vue/shared";
-import { isSameVnode, Text } from "./createVnode";
+import { ShapeFlags, getSequence, hasOwn } from "@vue/shared";
+import { isSameVnode, Text, Fragment } from "./createVnode";
+import { reactive, ReactiveEffect } from "@vue/reactivity";
+import { createComponentInstance, setupComponent } from "./component";
+import queueJob from "./scheduler";
 export const createRenderer = (renderOptions) => {
   const {
     insert: hostInsert,
@@ -27,21 +30,28 @@ export const createRenderer = (renderOptions) => {
       //两次虚拟节点相同，不需要更新
       return;
     }
-
     //不是同一个虚拟节点
     if (n1 && !isSameVnode(n1, n2)) {
       unmount(n1);
-      mount(n2, container, anchor);
+      return mount(n2, container, anchor);
     }
+    const { type, shapeFlag } = n2;
 
-    const { type } = n2;
-    console.log(type);
     switch (type) {
       case Text:
         processText(n1, n2, container);
         break;
+      case Fragment:
+        processFragment(n1, n2, container);
+        break;
       default:
-        processElelment(n1, n2, container, anchor);
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          //元素节点
+          processElelment(n1, n2, container, anchor);
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          //组件
+          processComponent(n1, n2, container, anchor);
+        }
         break;
     }
   };
@@ -84,6 +94,10 @@ export const createRenderer = (renderOptions) => {
     hostInsert(el, container, anchor);
   };
   const unmount = (vnode) => {
+    if (vnode.type === Fragment) {
+      unmountChildren(vnode.children);
+      return;
+    }
     hostRemove(vnode.el);
   };
   const unmountChildren = (children) => {
@@ -110,6 +124,79 @@ export const createRenderer = (renderOptions) => {
         hostSetText(el, n2.children);
       }
     }
+  };
+  const processFragment = (n1, n2, container) => {
+    if (n1 == null) {
+      //初次挂载
+      mountChildren(n2.children, container);
+    } else {
+      patchChildren(n1, n2, container);
+    }
+  };
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 == null) {
+      mountComponent(n2, container, anchor);
+    } else {
+      //组建的更新
+
+      UpdateComponent(n1, n2, container);
+    }
+  };
+  //挂载组件
+  const mountComponent = (vnode, container, anchor) => {
+    const instance = (vnode.component = createComponentInstance(vnode));
+    setupComponent(instance);
+    setupRenderEffect(instance, container, anchor);
+  };
+  const setupRenderEffect = (instance, container, anchor) => {
+    //组件更新函数
+    const { render } = instance;
+    const componmentUpdateFn = () => {
+      debugger;
+      if (!instance.isMounted) {
+        //初次挂载
+        const subTree = render.call(instance.proxy, instance.proxy); //调用render函数,返回一个vnode
+        instance.subTree = subTree;
+        patch(null, subTree, container); //渲染更新
+        instance.isMounted = true; //
+      } else {
+        //更新
+
+        const prev = instance.subTree;
+        const next = (instance.subTree = render.call(
+          instance.proxy,
+          instance.proxy
+        ));
+
+        patch(prev, next, container); //比较更新
+      }
+    };
+
+    //effect
+    const effect = new ReactiveEffect(componmentUpdateFn, () => {
+      queueJob(update);
+    });
+    const update = (instance.update = () => {
+      effect.run();
+    });
+    update();
+  };
+  //更新组件
+  const UpdateComponent = (n1, n2, container) => {
+    //复用组件的实例
+    const instance = (n2.component = n1.component);
+    const { props: nextProps } = n2;
+    const { props: prevProps } = n1;
+    updateProps(nextProps, prevProps, instance);
+  };
+  const updateProps = (nextProps, prevProps, instance) => {
+    instance.props.address = nextProps.address;
+    // for (let key in nextProps) {
+    //   if (!hasOwn(prevProps, key)) {
+    //     //新的属性
+    //     instance.props[key] = nextProps[key];
+    //   }
+    // }
   };
   //对比属性
   const patchProps = (el, oldProps, newProps) => {
@@ -174,6 +261,7 @@ export const createRenderer = (renderOptions) => {
       const n2 = c2[i];
       if (isSameVnode(n1, n2)) {
         //是同一个节点，递归对比
+        console.log(n1, n2);
         patch(n1, n2, el);
       } else {
         //不是同一个节点，跳出循环

@@ -12,3 +12,8 @@ export const isString = (value: unknown): value is string => {
 
 export * from "./shapeFlages";
 export * from "./sq";
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+export const hasOwn = (value, key) => {
+  return hasOwnProperty.call(value, key);
+};

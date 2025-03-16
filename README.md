@@ -61,3 +61,8 @@ pnpm i
 - 两组 vnode 进行比较时先从开头进行比较，再从尾部进行比较如果是同一个 vnode 则走递归渲染更新
   最后处理插入/删除的 vnode
 - 可根据 vnode 的 el 属性判断是否是创建的新节点
+
+### 组件的渲染
+
+- 组件由两个虚拟节点组成 h(component),component 对象中的 rander 方法返回一个 h 函数
+- 组件挂载时 会将 component date 方法返回的数据转化为响应式数据，并维护自己的 effect
