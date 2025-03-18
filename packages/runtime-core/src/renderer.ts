@@ -2,6 +2,7 @@ import { ShapeFlags, getSequence, hasOwn } from "@vue/shared";
 import { isSameVnode, Text, Fragment } from "./createVnode";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
 import { createComponentInstance, setupComponent } from "./component";
+import { invokeHooks } from "./apiLifecycle";
 import queueJob from "./scheduler";
 export const createRenderer = (renderOptions) => {
   const {
@@ -97,6 +98,8 @@ export const createRenderer = (renderOptions) => {
     if (vnode.type === Fragment) {
       unmountChildren(vnode.children);
       return;
+    } else if (vnode.shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      return unmount(vnode.component.subTree);
     }
     hostRemove(vnode.el);
   };
@@ -150,18 +153,25 @@ export const createRenderer = (renderOptions) => {
   };
   const setupRenderEffect = (instance, container, anchor) => {
     //组件更新函数
-    const { render } = instance;
+    const { render, bm, m, bu, u } = instance;
     const componmentUpdateFn = () => {
-      debugger;
       if (!instance.isMounted) {
         //初次挂载
+        if (bm) {
+          invokeHooks(bm); //执行beforeMount钩子
+        }
         const subTree = render.call(instance.proxy, instance.proxy); //调用render函数,返回一个vnode
         instance.subTree = subTree;
         patch(null, subTree, container); //渲染更新
+        if (m) {
+          invokeHooks(m); //执行mounted钩子
+        }
         instance.isMounted = true; //
       } else {
         //更新
-
+        if (bu) {
+          invokeHooks(bu); //执行beforeUpdate钩子
+        }
         const prev = instance.subTree;
         const next = (instance.subTree = render.call(
           instance.proxy,
@@ -169,6 +179,9 @@ export const createRenderer = (renderOptions) => {
         ));
 
         patch(prev, next, container); //比较更新
+        if (u) {
+          invokeHooks(u); //执行updated钩子
+        }
       }
     };
 

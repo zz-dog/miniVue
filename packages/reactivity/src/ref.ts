@@ -78,7 +78,7 @@ export const toRefs = (object: object, key) => {
 };
 
 export const proxyRefs = (objectWithRef) => {
-  if (!objectWithRef.__v_isRef) return objectWithRef;
+  if (!objectWithRef?.__v_isRef) return objectWithRef;
   return objectWithRef.value;
 };
 export const isRef = (value) => {

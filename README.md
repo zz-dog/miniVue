@@ -64,5 +64,13 @@ pnpm i
 
 ### 组件的渲染
 
-- 组件由两个虚拟节点组成 h(component),component 对象中的 rander 方法返回一个 h 函数
+- 组件由两个虚拟节点组成 h(component),component 对象中的 rander/setup 方法返回一个 h 函数
 - 组件挂载时 会将 component date 方法返回的数据转化为响应式数据，并维护自己的 effect
+
+### setup
+
+### 组件的生命的周期
+
+- 采取了发布定于模式
+- 将周期函数记录在实例上
+- 在组件的挂载，更新，卸载时依次执行

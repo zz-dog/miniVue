@@ -1,5 +1,6 @@
-import { reactive } from "@vue/reactivity";
-import { hasOwn, isFunction } from "@vue/shared";
+import { proxyRefs, reactive } from "@vue/reactivity";
+import { hasOwn, isFunction, ShapeFlags } from "@vue/shared";
+
 export const createComponentInstance = (vnode) => {
   const instance = {
     date: null, //组件的数据
@@ -12,6 +13,9 @@ export const createComponentInstance = (vnode) => {
     component: null, //组件的实例
     propsOptions: vnode.type.props || {}, //props的配置
     proxy: null, //用来代理props和attrs,date
+    setupState: {}, //setup返回的状态
+    slots: {}, //插槽
+    expose: {},
   };
   return instance;
 };
@@ -19,12 +23,37 @@ export const createComponentInstance = (vnode) => {
 export const setupComponent = (instance) => {
   const { vnode } = instance;
   initProps(instance, vnode.props);
-  //初始化插槽
-  const { date = () => {}, render } = vnode.type;
-  if (!isFunction(date)) console.warn(`setupComponent: date is not a function`);
+  initSlots(instance, vnode.children); //初始化插槽
+  initProxy(instance); //初始化代理
+
+  const { date = () => {}, render, setup } = vnode.type;
+  if (setup) {
+    const setupContext = {
+      attrs: instance.attrs,
+      props: instance.props,
+      slots: instance.slots,
+      emit: (event, ...play) => {
+        const eventName = `on${event.replace(
+          event[0],
+          event[0].toUpperCase()
+        )}`;
+        const handler = instance.vnode.props[eventName];
+        handler && handler(...play);
+      },
+    };
+    setCurrentInstance(instance);
+
+    const setupResult = setup(instance.props, setupContext);
+    unsetCurrentInstance();
+    if (isFunction(setupResult)) {
+      instance.render = setupResult;
+    } else {
+      instance.setupState = setupResult;
+    }
+  }
   instance.date = date;
   instance.date = reactive(date.call(instance.proxy));
-  instance.render = render;
+  instance.render ??= render;
 };
 
 const initProps = (instance, rawProps) => {
@@ -44,22 +73,36 @@ const initProps = (instance, rawProps) => {
   }
   instance.props = reactive(props);
   instance.attrs = attrs;
+};
+const initSlots = (instance, children) => {
+  if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+    instance.slots = children;
+  }
+};
 
+const initProxy = (instance) => {
   //代理
   const publicProps = {
     $attrs: (instance) => {
-      instance.attrs;
+      return instance.attrs;
+    },
+    $slots: (instance) => {
+      return instance.slots;
     },
   };
   instance.proxy = new Proxy(instance, {
     get(target, key, receiver) {
-      const { date, props } = target;
+      const { date, props, setupState } = target;
       if (date && hasOwn(date, key)) {
         return Reflect.get(date, key, receiver);
       } else if (props && hasOwn(props, key)) {
         return Reflect.get(props, key, receiver);
+      } else if (setupState && hasOwn(setupState, key)) {
+        const value = proxyRefs(setupState[key]);
+        return value;
       }
       const getter = publicProps[key];
+
       if (getter) {
         return getter(instance);
       }
@@ -74,4 +117,15 @@ const initProps = (instance, rawProps) => {
       return true;
     },
   });
+};
+export let currentInstance = null;
+export const getCurrentInstance = () => {
+  return currentInstance;
+};
+export const setCurrentInstance = (instance) => {
+  currentInstance = instance;
+};
+
+export const unsetCurrentInstance = () => {
+  currentInstance = null;
 };

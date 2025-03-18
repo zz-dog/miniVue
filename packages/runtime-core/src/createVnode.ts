@@ -20,6 +20,10 @@ export const createVnode = (type, props, children?) => {
     //判断children是文本还是数组
     if (Array.isArray(children)) {
       vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
+    } else if (isObject(children)) {
+      //对象
+
+      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
     } else {
       //文本节点
       children = String(children);
