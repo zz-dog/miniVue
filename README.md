@@ -61,6 +61,7 @@ pnpm i
 - 两组 vnode 进行比较时先从开头进行比较，再从尾部进行比较如果是同一个 vnode 则走递归渲染更新
   最后处理插入/删除的 vnode
 - 可根据 vnode 的 el 属性判断是否是创建的新节点
+- 性能优化：求最长连续子序列，在子组件的插入/删除时可以减少对 dom 的操作
 
 ### 组件的渲染
 
@@ -69,8 +70,30 @@ pnpm i
 
 ### setup
 
+- 允许用户使用 ref,reactive 等方法
+- 可以返回一个对象响应式对象数据/()=>vnode
+- ()=>vnode 优先级高于 component 中的 render 方法
+
 ### 组件的生命的周期
 
 - 采取了发布定于模式
 - 将周期函数记录在实例上
 - 在组件的挂载，更新，卸载时依次执行
+
+### 组件的 ref
+
+- 定义一个 ref 数据
+- vnode 的 props.ref 记录 ref
+- 判断 vnode 是否为状态组件
+- 状态式组件：将 intance.exposed/instance.proxy 传入
+- 普通 vnode：将创建的真实 dom 传入
+
+### 依赖注入 实现原理
+
+- 建立父子实例依赖关系 children -> parent,将父实例中的 provides 存入子实例的 provides
+- 调用 provide 时会拷贝当前的 provides 避免修改父实例中的 provides,并添加用户提供的 key,value
+- 调用 inject 时返回当前的 provides[key]
+
+### Teleport 组件
+
+- 和 render 组件相似

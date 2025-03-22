@@ -9,3 +9,4 @@ const render = (vnode, container) => {
 };
 export { render };
 export * from "@vue/runtime-core";
+export * from "@vue/reactivity";

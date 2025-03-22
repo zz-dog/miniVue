@@ -13,6 +13,7 @@
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
     "@vue/shared": "workspace:*",
-    "@vue/runtime-core": "workspace:*"
+    "@vue/runtime-core": "workspace:*",
+    "@vue/reactivity": "workspace:*"
   }
 }
