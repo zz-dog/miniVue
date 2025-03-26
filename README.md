@@ -94,6 +94,22 @@ pnpm i
 - 调用 provide 时会拷贝当前的 provides 避免修改父实例中的 provides,并添加用户提供的 key,value
 - 调用 inject 时返回当前的 provides[key]
 
+### 函数式组件
+
+- 函数式组件和状态式组件类似，需要返回一个 vnode
+
 ### Teleport 组件
 
 - 和 render 组件相似
+
+### transition 组件
+
+- transition 是一个函数组件，接收一个 props 参数
+- transition 会根据 props 中的 name 定义应用的 css 类名
+- 在组件的挂载和卸载时会根据 props 中的 name 和 css 类名进行过渡动画
+
+### keppAlive 组件
+
+- keppAlive 可以缓存组件，组件不会被销毁，切换组件时只是将 dom 移除
+
+## compiler-core vue 模板编译核心

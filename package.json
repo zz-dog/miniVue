@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node ./script/dev.js reactivity -f esm",
     "dev:runtime-dom": "node ./script/dev.js runtime-dom -f esm",
+    "dev:compiler-core": "node ./script/dev.js compiler-core -f esm",
     "prepare": "husky"
   },
   "keywords": [],

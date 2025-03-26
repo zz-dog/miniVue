@@ -51,6 +51,7 @@ export const createRenderer = (renderOptions) => {
           processElelment(n1, n2, container, anchor, parentComponent);
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
           //组件
+          //状态组件
           processComponent(n1, n2, container, anchor, parentComponent);
         }
         break;
@@ -166,6 +167,17 @@ export const createRenderer = (renderOptions) => {
     setupComponent(instance);
     setupRenderEffect(instance, container, anchor, parentComponent);
   };
+
+  const renderComponent = (instance) => {
+    const { vnode, render, attrs, slots } = instance;
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      //状态组件
+      return render.call(instance.proxy);
+    } else {
+      //函数组件
+      return vnode.type(attrs, { slots });
+    }
+  };
   const setupRenderEffect = (instance, container, anchor, parentComponent) => {
     //组件更新函数
     const { render, bm, m, bu, u } = instance;
@@ -175,7 +187,8 @@ export const createRenderer = (renderOptions) => {
         if (bm) {
           invokeHooks(bm); //执行beforeMount钩子
         }
-        const subTree = render.call(instance.proxy, instance.proxy); //调用render函数,返回一个vnode
+        const subTree = renderComponent(instance); //调用render函数,返回一个vnode
+        // const subTree = render.call(instance.proxy, instance.proxy); //调用render函数,返回一个vnode
         instance.subTree = subTree;
 
         patch(null, subTree, container, null, instance); //渲染更新
@@ -216,16 +229,16 @@ export const createRenderer = (renderOptions) => {
     const instance = (n2.component = n1.component);
     const { props: nextProps } = n2;
     const { props: prevProps } = n1;
-    updateProps(nextProps, prevProps, instance);
+    updateProps(nextProps, prevProps, instance); //更新属性
   };
   const updateProps = (nextProps, prevProps, instance) => {
-    instance.props.address = nextProps.address;
-    // for (let key in nextProps) {
-    //   if (!hasOwn(prevProps, key)) {
-    //     //新的属性
-    //     instance.props[key] = nextProps[key];
-    //   }
-    // }
+    // instance.props.address = nextProps.address;
+    for (let key in nextProps) {
+      if (!hasOwn(prevProps, key)) {
+        //新的属性
+        instance.props[key] = nextProps[key];
+      }
+    }
   };
   //对比属性
   const patchProps = (el, oldProps, newProps) => {

@@ -17,3 +17,5 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
 export const hasOwn = (value, key) => {
   return hasOwnProperty.call(value, key);
 };
+
+export * from "./patchFlages";
